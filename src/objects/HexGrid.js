@@ -1,18 +1,98 @@
 import HexTile from './HexTile.js';
 
 export default class HexGrid {
-    constructor(scene, centerX, centerY, size, radius) {
+    constructor(scene, centerX, centerY, size, radius, mapId) {
         this.scene = scene;
         this.centerX = centerX;
         this.centerY = centerY;
         this.hexSize = size;
         this.mapRadius = radius;
+        this.mapId = mapId;
         this.tiles = new Map(); // key: "q,r", value: HexTile
 
         this.generateMap();
     }
 
     generateMap() {
+        if (this.mapId === 1) {
+            this.generateMap1();
+        } else if (this.mapId === 2) {
+            this.generateMap2();
+        } else if (this.mapId === 3) {
+            this.generateMap3();
+        }
+    }
+
+    generateMap2() {
+        // Map 2: Custom Row Lengths
+        // Rows: 3, 6, 9, 10, 11, 10, 11, 10, 11, 10, 9, 6, 3
+        // Total 13 rows -> r from -6 to 6
+        const rowLengths = [3, 6, 9, 10, 11, 10, 11, 10, 11, 10, 9, 6, 3];
+        const rStart = -6;
+
+        for (let i = 0; i < rowLengths.length; i++) {
+            const r = rStart + i;
+            const count = rowLengths[i];
+
+            // To center the row, we need to find the starting q
+            // Standard Hex Logic: q + r + s = 0
+            // For r=-6 (Top), q usually starts at 0 or near it depending on shape
+            // Let's assume Axial symmetry where (0,0) is center.
+            // Row Center Q ~= -r/2.
+            // Start Q = Math.round(-r/2 - (count-1)/2)
+
+            const centerQ = -r / 2.0;
+            const startQ = Math.ceil(centerQ - count / 2.0);
+
+            for (let k = 0; k < count; k++) {
+                const q = startQ + k;
+                this.createTile(q, r);
+            }
+        }
+
+        // Feature: Map 2 Specials
+        // 1. Center (0,0)
+        const center = this.getTile(0, 0);
+        if (center) center.setSpecial('중앙 타워');
+
+        // 2. Radius 3 Hexagon Vertices
+        const rad3Verts = [
+            { q: 0, r: -3 }, { q: 3, r: -3 }, { q: 3, r: 0 },
+            { q: 0, r: 3 }, { q: -3, r: 3 }, { q: -3, r: 0 }
+        ];
+
+        rad3Verts.forEach(v => {
+            const t = this.getTile(v.q, v.r);
+            if (t) t.setSpecial('위성 타워');
+        });
+
+        console.log(`Generated Map 2 (Custom Layout) with ${this.tiles.size} tiles.`);
+    }
+
+    generateMap3() {
+        // Map 3: Radius 6 Hexagon
+        // HQs at Radius 6 Corners (in GameManager)
+        this.addHexGroup(0, 0, 6);
+
+        // Specials: Specific Indices provided by User + Center Tile (0,0)
+        const specialIndices = [85, 108, 37, 20, 43, 91];
+
+        this.tiles.forEach(tile => {
+            if (specialIndices.includes(tile.index)) {
+                tile.setSpecial('내부 타워');
+            }
+        });
+
+        // Center Tile (0, 0)
+        const centerTile = this.getTile(0, 0);
+        if (centerTile) {
+            centerTile.setSpecial('중앙 타워');
+        }
+
+        console.log(`Generated Map 3 (Hexagon R6) with ${this.tiles.size} tiles.`);
+    }
+
+    generateMap1() {
         // Custom Map Data provided by User (v1.8 Hand-Drawn)
         const mapData = [
             { q: -9, r: 7 }, { q: -8, r: 7 }, { q: -7, r: 7 }, { q: -6, r: 7 }, { q: -5, r: 6 }, { q: -4, r: 6 }, { q: -3, r: 6 }, { q: -2, r: 6 }, { q: -1, r: 6 },
@@ -66,7 +146,7 @@ export default class HexGrid {
             }
         });
 
-        console.log(`Generated Custom Map with ${this.tiles.size} tiles.`);
+        console.log(`Generated Custom Map 1 with ${this.tiles.size} tiles.`);
     }
 
     addHexGroup(cq, cr, radius) {
@@ -119,5 +199,13 @@ export default class HexGrid {
             if (n) neighbors.push(n);
         }
         return neighbors;
+    }
+
+    destroy() {
+        this.tiles.forEach(tile => {
+            tile.destroy(); // Container destroy
+        });
+        this.tiles.clear();
+        console.log("HexGrid Destroyed");
     }
 }

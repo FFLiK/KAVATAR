@@ -2,7 +2,7 @@ import BootScene from './scenes/BootScene.js';
 import TitleScene from './scenes/TitleScene.js';
 import GameScene from './scenes/GameScene.js';
 import UIScene from './scenes/UIScene.js';
-import MapEditorScene from './scenes/MapEditorScene.js';
+
 
 const config = {
     type: Phaser.AUTO,
@@ -20,7 +20,7 @@ const config = {
         pixelArt: false,
         roundPixels: true // Snap to integers for sharp text
     },
-    scene: [BootScene, TitleScene, GameScene, UIScene, MapEditorScene]
+    scene: [BootScene, TitleScene, GameScene, UIScene]
 };
 
 const game = new Phaser.Game(config);

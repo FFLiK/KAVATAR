@@ -6,59 +6,151 @@ export default class UIScene extends Phaser.Scene {
     create() {
         this.gameScene = this.scene.get('GameScene');
 
-        // Styles
-        const style = { font: '32px Do Hyeon', fill: '#ffffff' }; // Increased from 24
-        const buttonStyle = { font: '28px Do Hyeon', fill: '#000000', backgroundColor: '#eeeeee', padding: 10 }; // Increased from 20
+        const width = this.cameras.main.width;
+        const height = this.cameras.main.height;
 
-        // 1. Status Bar (Top)
-        this.statusText = this.add.text(this.cameras.main.width / 2, 70, 'Waiting...', { font: '30px Do Hyeon', fill: '#ffffff' }).setOrigin(0.5); // Moved down (30->70), Larger
-        this.roundText = this.add.text(50, 30, 'ROUND 1', { font: '40px Do Hyeon', fill: '#ffffff' }); // Increased 32->40
-        this.apText = this.add.text(this.cameras.main.width - 250, 30, 'AP: 0', style); // Adjusted X, Larger
+        // --- RIGHT SIDE PANEL LAYOUT ---
+        // 1. Turn Timer (Top Right)
+        this.timerText = this.add.text(width - 50, 60, '60', {
+            fontFamily: 'Black Han Sans', fontSize: '90px', fill: '#ffeb3b',
+            stroke: '#000000', strokeThickness: 6
+        }).setOrigin(1, 0.5); // Right Aligned
 
-        // 2. Tile Count Info (Below Round)
-        this.tileCountText = this.add.text(50, 90, '', { font: '24px Do Hyeon', fill: '#cccccc' }); // Moved down slightly, Increased 18->24
+        this.add.text(width - 50, 110, 'SECONDS LEFT', {
+            fontFamily: 'Do Hyeon', fontSize: '20px', fill: '#ffffff'
+        }).setOrigin(1, 0.5);
 
-        // 3. Action Panel (Bottom Right)
-        const panelX = this.cameras.main.width - 220;
-        const panelY = this.cameras.main.height - 350;
 
-        this.recruitBtn = this.createButton(panelX, panelY, '징집 (1 AP)', () => this.gameScene.events.emit('actionRecruit'));
-        this.fortifyBtn = this.createButton(panelX, panelY + 60, '요새화 (2 AP)', () => this.gameScene.events.emit('actionFortify'));
-        this.purifyBtn = this.createButton(panelX, panelY + 120, '정화 (2 AP)', () => this.gameScene.events.emit('actionPurify'));
-        this.purifyBtn.setVisible(false); // Hidden by default
+        // 2. Round & Status (Below Timer)
+        this.roundText = this.add.text(width - 50, 170, 'ROUND 1', {
+            fontFamily: 'Do Hyeon', fontSize: '48px', fill: '#ffffff'
+        }).setOrigin(1, 0.5);
 
-        this.undoBtn = this.createButton(panelX, panelY + 180, '되돌리기', () => this.gameScene.events.emit('actionUndo'));
-        this.endTurnBtn = this.createButton(panelX, panelY + 240, '턴 종료', () => this.gameScene.events.emit('actionEndTurn'));
+        this.statusText = this.add.text(width - 50, 220, 'Team Name', {
+            fontFamily: 'Do Hyeon', fontSize: '38px', fill: '#aaaaaa'
+        }).setOrigin(1, 0.5);
 
-        // Attack Cost Info (Interactive + Hover Text)
-        const infoBg = this.add.rectangle(panelX + 110, panelY + 315, 220, 50, 0xeeeeee)
-            .setInteractive()
-            .setOrigin(0.5);
 
-        const infoText = this.add.text(panelX + 25, panelY + 300, '공격/점령 (2 AP)', {
-            fontFamily: 'Do Hyeon', fontSize: '28px', color: '#000000'
+        // 3. Scoreboard & AP Board (Table Style)
+        // Header
+        const startY = 280;
+        const gapY = 55; // Increased Gap
+
+        // Shifted left significantly to prevent overlap
+        // Team | Land | AP | Purify
+        const col1 = width - 550; // Team Name (Moved further left)
+        const col2 = width - 390; // Land
+        const col3 = width - 240; // AP
+        const col4 = width - 100; // Purify (Now has margin from edge)
+
+        this.add.text(col1, startY, 'TEAM', { font: '28px Do Hyeon', fill: '#888888' });
+        this.add.text(col2, startY, 'LAND', { font: '28px Do Hyeon', fill: '#888888' });
+        this.add.text(col3, startY, 'AP (+INC)', { font: '28px Do Hyeon', fill: '#888888' });
+        // Store Header to toggle visibility
+        this.purifyHeader = this.add.text(col4, startY, 'PURIFY', { font: '24px Do Hyeon', fill: '#888888' }).setVisible(false);
+
+        const teamNames = [
+            '', // 0
+            '주황 넙죽이', // 1
+            '노랑 넙죽이', // 2
+            '초록 넙죽이', // 3
+            '파랑 넙죽이', // 4
+            '보라 넙죽이', // 5
+            '갈색 넙죽이'  // 6
+        ];
+
+        this.teamInfoTexts = [];
+        // Create rows for max 6 teams + Phonics? (Phonics usually doesn't have AP/Land score relevant for players but good to show)
+        // Let's do Team 1-6
+        for (let i = 1; i <= 6; i++) {
+            const y = startY + 40 + (i * gapY);
+
+            // Name (Color Name)
+            const tName = this.add.text(col1, y, teamNames[i] || `Team ${i}`, { font: '32px Do Hyeon', fill: '#ffffff' });
+            // Land
+            const tLand = this.add.text(col2 + 30, y, '0', { font: '32px Do Hyeon', fill: '#ffffff' }).setOrigin(0.5, 0);
+            // AP
+            const tAP = this.add.text(col3 + 50, y, '0 (+0)', { font: '32px Do Hyeon', fill: '#ffffff' }).setOrigin(0.5, 0);
+            // Purify Count (Initially Hidden)
+            const tPurify = this.add.text(col4 + 30, y, '0', { font: '32px Do Hyeon', fill: '#00ffff' }).setOrigin(0.5, 0).setVisible(false);
+
+            this.teamInfoTexts[i] = { name: tName, land: tLand, ap: tAP, purify: tPurify };
+        }
+
+        // HIDDEN Phonics Row (Team 9)
+        const pY = startY + 40 + (7 * gapY); // Below Team 6
+        this.phonicsInfo = {
+            name: this.add.text(col1, pY, 'PONIX', { font: '32px Do Hyeon', fill: '#ff0000' }).setVisible(false),
+            land: this.add.text(col2 + 30, pY, '0', { font: '32px Do Hyeon', fill: '#ff0000' }).setOrigin(0.5, 0).setVisible(false)
+        };
+
+
+        // 4. Action Buttons (Moved Bottom Right but higher to fit)
+        // Or keep them at bottom right, maybe slightly adjusted
+        const panelX = width - 220;
+        const panelY = height - 350;
+
+        // HOME Button (Top Left now? Or keep Top Right but moved left?)
+        // Let's put Home Button Top Left for safety
+        const homeBtn = this.createButton(80, 40, 'HOME', () => {
+            window.location.reload();
         });
+        homeBtn.setScale(0.7);
 
-        // Hover Effect on Text
-        infoBg.on('pointerdown', () => console.log('Attack Info Clicked'))
-            .on('pointerover', () => infoText.setStyle({ fill: '#0000ff' })) // Text turns Blue
-            .on('pointerout', () => infoText.setStyle({ fill: '#000000' })); // Restore Black
 
-        // Listen to updates
-        this.gameScene.events.on('updateUI', () => this.updateUI());
+        // Action Panel
+        const actionX = width - 110;
+        const actionStartY = height - 300;
+        const actionGap = 55;
+
+        this.recruitBtn = this.createButton(actionX, actionStartY, '징집 (Q)', () => this.gameScene.events.emit('actionRecruit'));
+        this.fortifyBtn = this.createButton(actionX, actionStartY + actionGap, '요새화 (W)', () => this.gameScene.events.emit('actionFortify'));
+        this.expandBtn = this.createButton(actionX, actionStartY + actionGap * 2, '확장 (E)', () => this.gameScene.events.emit('actionExpand'));
+        this.purifyBtn = this.createButton(actionX, actionStartY + actionGap * 3, '정화 (R)', () => this.gameScene.events.emit('actionPurify'));
+        this.purifyBtn.setVisible(false);
+
+        // Undo / End Turn separate
+        // Undo / End Turn separate (Now Stacked Vertically Below Purify)
+        this.undoBtn = this.createButton(actionX, actionStartY + actionGap * 4, '되돌리기 (A)', () => this.gameScene.events.emit('actionUndo'));
+        this.endTurnBtn = this.createButton(actionX, actionStartY + actionGap * 5, '턴 종료 (SPC)', () => this.gameScene.events.emit('actionEndTurn'));
+
+
+        // Listen to updates - SAVE HANDLERS for cleanup
+        this.updateUIHandler = () => this.updateUI();
+        this.showToastHandler = (msg) => this.showToast(msg);
+
+        this.gameScene.events.on('updateUI', this.updateUIHandler);
+        this.gameScene.events.on('showToast', this.showToastHandler);
+
         // Initial update
         this.time.delayedCall(100, () => this.updateUI());
+
+        // Cleanup when UIScene shuts down
+        this.events.on('shutdown', () => {
+            if (this.gameScene) {
+                this.gameScene.events.off('updateUI', this.updateUIHandler);
+                this.gameScene.events.off('showToast', this.showToastHandler);
+            }
+        });
     }
 
     createButton(x, y, text, callback) {
         const btn = this.add.text(x, y, text, {
-            fontFamily: 'Do Hyeon', fontSize: '28px', color: '#000000', backgroundColor: '#eeeeee',
-            padding: { x: 15, y: 15 }
+            fontFamily: 'Do Hyeon', fontSize: '32px', color: '#ffffff',
+            stroke: '#000000', strokeThickness: 4,
+            padding: { x: 10, y: 5 }
         })
             .setInteractive()
+            .setOrigin(0.5)
             .on('pointerdown', callback)
-            .on('pointerover', () => btn.setStyle({ fill: '#0000ff' }))
-            .on('pointerout', () => btn.setStyle({ fill: '#000000' }));
+            .on('pointerover', () => {
+                btn.setStyle({ fill: '#3366ff' }); // Blue visual feedback
+                btn.setScale(1.1); // Slight pop
+            })
+            .on('pointerout', () => {
+                btn.setStyle({ fill: '#ffffff' });
+                btn.setScale(1.0);
+            });
         return btn;
     }
 
@@ -66,47 +158,120 @@ export default class UIScene extends Phaser.Scene {
         if (!this.gameScene || !this.gameScene.gameManager) return;
         const gm = this.gameScene.gameManager;
 
-        // Toggle Purify Button visibility
+        // 1. Timer
+        const time = gm.timeLeft || 0;
+        this.timerText.setText(time);
+        if (time <= 10) this.timerText.setColor('#ff0000');
+        else this.timerText.setColor('#ffeb3b');
+
+        // 2. Round & Status
+        this.roundText.setText(`ROUND ${gm.currentRound}`);
+        const currentTeam = gm.getCurrentTeam();
+        if (currentTeam) {
+            this.statusText.setText(`${currentTeam.name} Turn`);
+            this.statusText.setColor(this.getColorString(currentTeam.id));
+        } else {
+            this.statusText.setText('AI Processing...');
+            this.statusText.setColor('#ff0000');
+        }
+
+        // 3. Scoreboard & AP Update
+        // Calculate Land Counts
+        const counts = {};
+        gm.grid.getAllTiles().forEach(t => {
+            counts[t.ownerID] = (counts[t.ownerID] || 0) + 1;
+        });
+
+        // Update Rows
+        for (let i = 1; i <= 6; i++) {
+            const team = gm.teamData[i];
+            const ui = this.teamInfoTexts[i];
+            if (!team || !ui) {
+                // Hide if team doesn't exist (e.g. Map 1 only 5 teams)
+                if (ui) {
+                    ui.name.setVisible(false);
+                    ui.land.setVisible(false);
+                    ui.ap.setVisible(false);
+                }
+                continue;
+            }
+
+            ui.name.setVisible(true);
+            ui.land.setVisible(true);
+            ui.ap.setVisible(true);
+
+            // Update Name color
+            ui.name.setColor(this.getColorString(i));
+
+            // Land Count
+            const land = counts[i] || 0;
+            ui.land.setText(land);
+
+            // AP + Income
+            const income = gm.calculateIncome(i);
+            ui.ap.setText(`${team.ap} (+${income})`);
+
+            // Purify Count
+            ui.purify.setText(team.purifyCount || 0);
+
+            // Highlight current team
+            if (gm.currentTurn === i) {
+                ui.name.setStroke('#ffffff', 2);
+            } else {
+                ui.name.setStroke('#000000', 0);
+            }
+        }
+
+        // Update Phonics (Team 9) Row AND Purify Column if Part 2 (Round > 15)
+        const isPart2 = gm.currentRound > 15 || gm.isPart2;
+
+        // Toggle Header
+        if (this.purifyHeader) this.purifyHeader.setVisible(isPart2);
+
+        if (isPart2) {
+            const phonicsLand = counts[9] || 0;
+            this.phonicsInfo.name.setVisible(true);
+            this.phonicsInfo.land.setVisible(true);
+            this.phonicsInfo.land.setText(phonicsLand);
+        } else {
+            this.phonicsInfo.name.setVisible(false);
+            this.phonicsInfo.land.setVisible(false);
+        }
+
+        // Toggle Purify Columns
+        for (let i = 1; i <= 6; i++) {
+            const ui = this.teamInfoTexts[i];
+            if (ui && ui.purify) {
+                ui.purify.setVisible(isPart2);
+            }
+        }
+
+        // 4. Buttons
         if (gm.isPart2 && !this.purifyBtn.visible) {
             this.purifyBtn.setVisible(true);
         }
+    }
 
-        const team = gm.getCurrentTeam();
-
-        // Update Round
-        this.roundText.setText(`ROUND ${gm.currentRound}`);
-
-        // Update Status
-        if (team) {
-            this.statusText.setText(`현재 차례: ${team.name}`);
-            this.statusText.setColor(this.getColorString(team.id));
-            this.apText.setText(`AP: ${team.ap}`);
-        } else {
-            this.statusText.setText('AI Turn / Processing...');
-            this.statusText.setColor('#ff0000'); // Phonics Red
-        }
-
-        // Update Tile Counts
-        const counts = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 9: 0, 0: 0 };
-        let total = 0;
-        gm.grid.getAllTiles().forEach(t => {
-            counts[t.ownerID] = (counts[t.ownerID] || 0) + 1;
-            total++;
+    showToast(message) {
+        // (Keep existing toast logic if possible, or simplified version)
+        if (this.currentToast) this.currentToast.destroy();
+        const x = this.cameras.main.width / 2;
+        const y = this.cameras.main.height - 100;
+        const container = this.add.container(x, y);
+        const text = this.add.text(0, 0, message, {
+            fontFamily: 'Do Hyeon', fontSize: '24px', color: '#ffffff',
+            backgroundColor: '#000000', padding: { x: 20, y: 10 }
+        }).setOrigin(0.5);
+        container.add(text);
+        container.setDepth(100);
+        this.tweens.add({
+            targets: container, alpha: 0, duration: 1000, delay: 1000,
+            onComplete: () => { container.destroy(); if (this.currentToast === container) this.currentToast = null; }
         });
-
-        let infoStr = `전체 칸: ${total}\n`;
-        infoStr += `주황: ${counts[1]}\n`;
-        infoStr += `노랑: ${counts[2]}\n`;
-        infoStr += `초록: ${counts[3]}\n`;
-        infoStr += `파랑: ${counts[4]}\n`;
-        infoStr += `보라: ${counts[5]}\n`;
-        if (counts[9] > 0) infoStr += `포닉스: ${counts[9]}\n`;
-
-        this.tileCountText.setText(infoStr);
+        this.currentToast = container;
     }
 
     getColorString(id) {
-        // Updated colors
         const colors = [
             '#888888', // 0 Neutral
             '#FFA500', // 1 Orange
@@ -114,10 +279,10 @@ export default class UIScene extends Phaser.Scene {
             '#00FF00', // 3 Green
             '#0000FF', // 4 Blue
             '#800080', // 5 Purple
-            '#888888', // 6
-            '#888888', // 7
-            '#888888', // 8
-            '#FF0000'  // 9 Phonics (Red)
+            '#8b4513', // 6 Brown
+            '#888888',
+            '#888888',
+            '#FF0000'  // 9 Phonics
         ];
         return colors[id] || '#ffffff';
     }

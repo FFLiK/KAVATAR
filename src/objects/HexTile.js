@@ -78,6 +78,7 @@ export default class HexTile extends Phaser.GameObjects.Container {
         else if (this.ownerID === 3) color = 0x00ff00; // Green
         else if (this.ownerID === 4) color = 0x0000ff; // Blue
         else if (this.ownerID === 5) color = 0x800080; // Purple
+        else if (this.ownerID === 6) color = 0x8b4513; // Brown (Team 6)
         else if (this.ownerID === 9) color = 0xff0000; // Phonics (Bright Red)
 
         // Settings for Transparency
