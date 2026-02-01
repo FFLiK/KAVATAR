@@ -30,15 +30,13 @@ export default class TitleScene extends Phaser.Scene {
 
         // Map Cards Data
         const maps = [
-            { id: 1, title: 'KAIST 캠퍼스', color: 0x3366ff, type: 'KAIST' },
-            { id: 2, title: '109칸 육각형', color: 0xffcc00, type: 'HEX' },
-            { id: 3, title: '139칸 육각형', color: 0xff3333, type: 'BIG_HEX' }
+            { id: 1, title: 'KAIST 캠퍼스', color: 0x3366ff, type: 'KAIST' }
         ];
 
         // Create Cards
-        const cardWidth = 220;
-        const cardHeight = 300;
-        const gap = 80; // Increased Gap
+        const cardWidth = 350; // Increased Width
+        const cardHeight = 450; // Increased Height
+        const gap = 80;
         const totalWidth = (cardWidth * maps.length) + (gap * (maps.length - 1));
         const startX = (width - totalWidth) / 2 + (cardWidth / 2);
         const cardY = height * 0.55;
@@ -55,14 +53,14 @@ export default class TitleScene extends Phaser.Scene {
         const bg = this.add.graphics();
         bg.fillStyle(0x222222, 1);
         bg.lineStyle(2, 0x444444, 1);
-        bg.fillRoundedRect(-110, -150, 220, 300, 10);
-        bg.strokeRoundedRect(-110, -150, 220, 300, 10);
+        bg.fillRoundedRect(-175, -225, 350, 450, 15); // Adjusted for new size
+        bg.strokeRoundedRect(-175, -225, 350, 450, 15);
         container.add(bg);
 
         // Preview Area Background
         const previewBg = this.add.graphics();
         previewBg.fillStyle(0x111111, 1);
-        previewBg.fillRoundedRect(-110, -150, 220, 200, 10);
+        previewBg.fillRoundedRect(-175, -225, 350, 300, 15); // Adjusted
         container.add(previewBg);
 
         // Draw Mini Map Preview
@@ -71,24 +69,24 @@ export default class TitleScene extends Phaser.Scene {
         container.add(preview);
 
         // Map Title
-        const titleText = this.add.text(0, 80, mapData.title, {
-            fontFamily: 'Do Hyeon', fontSize: '28px', color: '#ffffff'
+        const titleText = this.add.text(0, 120, mapData.title, {
+            fontFamily: 'Do Hyeon', fontSize: '36px', color: '#ffffff'
         }).setOrigin(0.5);
         container.add(titleText);
 
         // Start Button visual (fake button inside card)
         const btnBg = this.add.graphics();
         btnBg.fillStyle(0xffffff, 0.1);
-        btnBg.fillRoundedRect(-60, 120, 120, 30, 15);
+        btnBg.fillRoundedRect(-80, 160, 160, 40, 20);
         container.add(btnBg);
 
-        const btnText = this.add.text(0, 135, 'START', {
-            fontFamily: 'Black Han Sans', fontSize: '16px', color: '#ffffff'
+        const btnText = this.add.text(0, 180, 'START', {
+            fontFamily: 'Black Han Sans', fontSize: '20px', color: '#ffffff'
         }).setOrigin(0.5);
         container.add(btnText);
 
         // Interactivity
-        const hitArea = new Phaser.Geom.Rectangle(-110, -150, 220, 300);
+        const hitArea = new Phaser.Geom.Rectangle(-175, -225, 350, 450);
         container.setInteractive(hitArea, Phaser.Geom.Rectangle.Contains);
 
         container.on('pointerover', () => {
@@ -102,8 +100,8 @@ export default class TitleScene extends Phaser.Scene {
             bg.clear();
             bg.fillStyle(0x333333, 1); // Lighter BG
             bg.lineStyle(2, mapData.color, 1); // Colored Border
-            bg.fillRoundedRect(-110, -150, 220, 300, 10);
-            bg.strokeRoundedRect(-110, -150, 220, 300, 10);
+            bg.fillRoundedRect(-175, -225, 350, 450, 15);
+            bg.strokeRoundedRect(-175, -225, 350, 450, 15);
         });
 
         container.on('pointerout', () => {
@@ -117,8 +115,8 @@ export default class TitleScene extends Phaser.Scene {
             bg.clear();
             bg.fillStyle(0x222222, 1);
             bg.lineStyle(2, 0x444444, 1);
-            bg.fillRoundedRect(-110, -150, 220, 300, 10);
-            bg.strokeRoundedRect(-110, -150, 220, 300, 10);
+            bg.fillRoundedRect(-175, -225, 350, 450, 15);
+            bg.strokeRoundedRect(-175, -225, 350, 450, 15);
         });
 
         container.on('pointerdown', () => {
@@ -182,8 +180,8 @@ export default class TitleScene extends Phaser.Scene {
                 { q: -4, r: 7 }, { q: -3, r: 7 }, { q: 0, r: 6 }, { q: 1, r: 6 }, { q: 2, r: 6 }, { q: -2, r: 7 }
             ];
 
-            graphics.translateCanvas(offsetX + 15, offsetY - 20); // Adjust for map shape
-            graphics.scaleCanvas(0.8, 0.8); // Fit card
+            graphics.translateCanvas(offsetX + 25, offsetY - 30); // Adjust for map shape
+            graphics.scaleCanvas(1.3, 1.3); // Fit card (Larger)
             mapData.forEach(t => drawHex(t.q, t.r, 0x3366ff));
         }
         else if (type === 'HEX') {
