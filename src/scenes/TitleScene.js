@@ -14,35 +14,35 @@ export default class TitleScene extends Phaser.Scene {
         const width = this.cameras.main.width;
         const height = this.cameras.main.height;
 
-        // Title Text
-        this.add.text(width / 2, height * 0.15, 'KAVATAR', {
-            fontFamily: 'Ghanachocolate', fontSize: '80px', color: '#ffffff',
-            stroke: '#000000', strokeThickness: 6
-        }).setOrigin(0.5);
+        // Background Image
+        const bg = this.add.image(width / 2, height / 2, 'bg_title');
+        bg.setDisplaySize(width, height);
 
-        this.add.text(width / 2, height * 0.25, '카바타: 최후의 넙죽이 (2026)', {
-            fontFamily: 'Ghanachocolate', fontSize: '24px', color: '#aaaaaa'
-        }).setOrigin(0.5);
+        // Start Button (positioned in bottom-right brown space area)
+        // Approximate position for 1920x1080: ~1650, 950
+        const startBtn = this.add.text(1650, 950, 'START', {
+            fontFamily: 'Ghanachocolate',
+            fontSize: '60px',
+            color: '#deb989',
+            stroke: '#3E2723',
+            strokeThickness: 4,
+            padding: { x: 30, y: 15 }
+        }).setOrigin(0.5).setInteractive().setScale(1.5); // 150% size
 
-        this.add.text(width / 2, height * 0.29, 'KAVATAR: The Last Nubzuki', {
-            fontFamily: 'Ghanachocolate', fontSize: '20px', color: '#888888'
-        }).setOrigin(0.5);
+        // Hover effect
+        startBtn.on('pointerover', () => {
+            startBtn.setStyle({ color: '#FFD700' }); // Gold on hover (preserves fontFamily)
+            startBtn.setScale(1.65); // 1.5 base * 1.1 hover
+        });
 
-        // Map Cards Data
-        const maps = [
-            { id: 1, title: 'KAIST 캠퍼스', color: 0x3366ff, type: 'KAIST' }
-        ];
+        startBtn.on('pointerout', () => {
+            startBtn.setStyle({ color: '#deb989' }); // Beige default (preserves fontFamily)
+            startBtn.setScale(1.5); // Back to 150% base
+        });
 
-        // Create Cards
-        const cardWidth = 350; // Increased Width
-        const cardHeight = 450; // Increased Height
-        const gap = 80;
-        const totalWidth = (cardWidth * maps.length) + (gap * (maps.length - 1));
-        const startX = (width - totalWidth) / 2 + (cardWidth / 2);
-        const cardY = height * 0.55;
-
-        maps.forEach((map, index) => {
-            this.createCard(startX + (index * (cardWidth + gap)), cardY, map);
+        // Start game on click (default to Map 1: KAIST)
+        startBtn.on('pointerdown', () => {
+            this.startGame(1);
         });
     }
 

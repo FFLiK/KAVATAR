@@ -37,6 +37,11 @@ export default class UIScene extends Phaser.Scene {
             this.updateUI();
         });
 
+        // Listen for Toast Messages
+        this.gameScene.events.on('showToast', (message) => {
+            this.showToast(message);
+        });
+
         // --- LOGO (Removed) ---
 
         // --- RIGHT SIDE PANEL LAYOUT ---
@@ -55,22 +60,22 @@ export default class UIScene extends Phaser.Scene {
         this.timerText.setStroke('#000000', 0);
 
         // 2. Round Info (Below Timer)
-        // User: 1665 (-5px), 300 (+20px), 75px
-        this.roundText = this.add.text(1665, 300, 'Round 1', {
-            fontFamily: 'Ghanachocolate', fontSize: '75px', fill: '#EFEBE9',
+        // User: 1655 (-10px from 1665), 300 (+20px), 55px (reduced 20px from 75px)
+        this.roundText = this.add.text(1655, 300, 'Round 1', {
+            fontFamily: 'Ghanachocolate', fontSize: '55px', fill: '#deb989',
             stroke: '#3E2723', strokeThickness: 4
         }).setOrigin(0.5);
 
         // Turn Status
         // User: 1665 (-5px), 350 (Preserved Y?), Remove "Turn" text
-        this.statusText = this.add.text(1665, 350, '주황 넙죽이', {
+        this.statusText = this.add.text(1655, 350, '주황 넙죽이', {
             fontFamily: 'Ghanachocolate', fontSize: '40px', fill: '#FFA500',
             stroke: '#000000', strokeThickness: 3
         }).setOrigin(0.5);
 
         // Turn AP Info (New)
-        // User: Below Turn Status, 40px.
-        this.turnApText = this.add.text(1665, 400, '0 Pt', {
+        // User: 1655 (-10px from 1665), Below Turn Status, 40px.
+        this.turnApText = this.add.text(1655, 400, '0 Pt', {
             fontFamily: 'Ghanachocolate', fontSize: '40px', fill: '#deb989',
             stroke: '#000000', strokeThickness: 3
         }).setOrigin(0.5);
@@ -81,12 +86,12 @@ export default class UIScene extends Phaser.Scene {
         const gapY = 35;
 
         // Cols - Adjusted to align with background table
-        // Team Name: 1400 (Left Align) - 1500 - 100
-        // Land: 1610 (Center) - 1660 - 50
+        // Team Name: 1420 (Left Align) - 1425 - 5
+        // Land: 1615 (Center) - 1610 + 5
         // Points: 1790 (Center) - no change
         // P (Purify): 1850 (Center) - no change
-        const col1 = 1400;
-        const col2 = 1610;
+        const col1 = 1420;
+        const col2 = 1615;
         const col3 = 1790;
         const col4 = 1850;
 
@@ -99,18 +104,18 @@ export default class UIScene extends Phaser.Scene {
         for (let i = 1; i <= 6; i++) {
             const y = startY + ((i - 1) * gapY);
 
-            // Font Size: 20px
-            const tName = this.add.text(col1, y, teamNames[i], { fontFamily: 'Ghanachocolate', fontSize: '20px', fill: '#deb989' }).setOrigin(0, 0.5); // Left Align
-            const tLand = this.add.text(col2, y, '0', { fontFamily: 'Ghanachocolate', fontSize: '20px', fill: '#deb989' }).setOrigin(0.5, 0.5); // Center
-            const tAP = this.add.text(col3, y, '0', { fontFamily: 'Ghanachocolate', fontSize: '20px', fill: '#deb989' }).setOrigin(0.5, 0.5); // Center
-            const tPurify = this.add.text(col4, y, '0', { fontFamily: 'Ghanachocolate', fontSize: '20px', fill: '#00ffff' }).setOrigin(0.5, 0.5).setVisible(false);
+            // Font Size: 24px (20% increase from 20px), letter-spacing: 1px
+            const tName = this.add.text(col1, y, teamNames[i], { fontFamily: 'Ghanachocolate', fontSize: '24px', fill: '#deb989', letterSpacing: 1 }).setOrigin(0, 0.5); // Left Align
+            const tLand = this.add.text(col2, y, '0', { fontFamily: 'Ghanachocolate', fontSize: '24px', fill: '#deb989', letterSpacing: 1 }).setOrigin(0.5, 0.5); // Center
+            const tAP = this.add.text(col3, y, '0', { fontFamily: 'Ghanachocolate', fontSize: '24px', fill: '#deb989', letterSpacing: 1 }).setOrigin(0.5, 0.5); // Center
+            const tPurify = this.add.text(col4, y, '0', { fontFamily: 'Ghanachocolate', fontSize: '24px', fill: '#00ffff', letterSpacing: 1 }).setOrigin(0.5, 0.5).setVisible(false);
             this.teamInfoTexts[i] = { name: tName, land: tLand, ap: tAP, purify: tPurify };
         }
 
         const pY = startY + (6 * gapY);
         this.ponixInfo = {
-            name: this.add.text(col1, pY, 'PONIX', { fontFamily: 'Ghanachocolate', fontSize: '20px', fill: '#FF5252' }).setOrigin(0, 0.5).setVisible(false),
-            land: this.add.text(col2, pY, '0', { fontFamily: 'Ghanachocolate', fontSize: '20px', fill: '#FF5252' }).setOrigin(0.5, 0.5).setVisible(false)
+            name: this.add.text(col1, pY, 'PONIX', { fontFamily: 'Ghanachocolate', fontSize: '24px', fill: '#FF5252', letterSpacing: 1 }).setOrigin(0, 0.5).setVisible(false),
+            land: this.add.text(col2, pY, '0', { fontFamily: 'Ghanachocolate', fontSize: '24px', fill: '#FF5252', letterSpacing: 1 }).setOrigin(0.5, 0.5).setVisible(false)
         };
 
 
@@ -203,16 +208,16 @@ export default class UIScene extends Phaser.Scene {
         this.createButton(btnX_Right, btnYStart + btnGap * 2, '< 특수 스킬 룰렛 >', () => this.openRoulette('SPECIAL'));
 
         // Row 4: Purify (Part 2 only), Mini-Game Roulette
-        this.purifyBtn = this.createButton(btnX_Left, btnYStart + btnGap * 3, '!! 정화 (R) !!', () => this.gameScene.events.emit('actionPurify'));
-        this.purifyBtn.setColor('#00FFFF').setVisible(false);
+        this.purifyBtn = this.createButton(btnX_Left, btnYStart + btnGap * 3, '< 정화 (R) >', () => this.gameScene.events.emit('actionPurify'));
+        this.purifyBtn.setVisible(false); // No color override - uses default beige
         this.createButton(btnX_Right, btnYStart + btnGap * 3, '< 미니게임 룰렛 >', () => this.openRoulette('MINIGAME'));
 
         // Undo Button (below grid, left aligned)
         this.undoBtn = this.createButton(btnX_Left, btnYStart + btnGap * 4 + 5, '< 되돌리기 (A) >', () => this.gameScene.events.emit('actionUndo'));
 
         // End Turn Button (right aligned, below grid)
-        this.endTurnBtn = this.createButton(btnX_Right, btnYStart + btnGap * 4 + 5, '<<< 턴 종료 (SPC) >>>', () => this.gameScene.events.emit('actionEndTurn'));
-        this.endTurnBtn.setColor('#FFD700'); // Gold color, but same font size as other buttons (15px)
+        this.endTurnBtn = this.createButton(btnX_Right, btnYStart + btnGap * 4 + 5, '< 턴 종료 (SPC) >', () => this.gameScene.events.emit('actionEndTurn'));
+        // Using default beige color (#deb989)
 
         // ...
 
@@ -352,18 +357,28 @@ export default class UIScene extends Phaser.Scene {
 
             ui.name.setVisible(true); ui.land.setVisible(true); ui.ap.setVisible(true);
             ui.name.setColor(this.getColorString(i));
-            ui.land.setText(counts[i] || 0);
+
+            // Show land count with purify count in parentheses (Part 2 only)
+            const landCount = counts[i] || 0;
+            const purifyCount = team.purifyCount || 0;
+            const isPart2 = gm.currentRound > 15 || gm.isPart2;
+
+            if (isPart2) {
+                ui.land.setText(`${landCount} (${purifyCount})`);
+            } else {
+                ui.land.setText(landCount);
+            }
+
             const income = gm.calculateIncome(i);
             ui.ap.setText(`${team.ap} (+${income})`);
-            ui.purify.setText(team.purifyCount || 0);
 
             if (gm.currentTurn === i) ui.name.setStroke('#ffffff', 2);
             else ui.name.setStroke('#000000', 0);
         }
 
-        // Part 2 Check
+        // Part 2 Check - Hide purify column completely (now shown in parentheses)
         const isPart2 = gm.currentRound > 15 || gm.isPart2;
-        if (this.purifyHeader) this.purifyHeader.setVisible(isPart2);
+        if (this.purifyHeader) this.purifyHeader.setVisible(false); // Always hidden
 
         if (isPart2) {
             const ponixLand = counts[9] || 0;
@@ -375,9 +390,10 @@ export default class UIScene extends Phaser.Scene {
             this.ponixInfo.land.setVisible(false);
         }
 
+        // Hide separate purify column (no longer used)
         for (let i = 1; i <= 6; i++) {
             const ui = this.teamInfoTexts[i];
-            if (ui && ui.purify) ui.purify.setVisible(isPart2);
+            if (ui && ui.purify) ui.purify.setVisible(false);
         }
 
         // 4. Buttons
@@ -417,7 +433,7 @@ export default class UIScene extends Phaser.Scene {
         container.add(text);
         container.setDepth(100);
         this.tweens.add({
-            targets: container, alpha: 0, duration: 1000, delay: 3000,
+            targets: container, alpha: 0, duration: 1000, delay: 1000, // Display for 1s, fade for 1s = 2s total
             onComplete: () => { container.destroy(); if (this.currentToast === container) this.currentToast = null; }
         });
         this.currentToast = container;
@@ -581,7 +597,7 @@ export default class UIScene extends Phaser.Scene {
 
         const radius = this.wheelRadius || 250;
         const sliceAngle = 360 / games.length;
-        const colors = [0xFF0000, 0xFF7F00, 0xFFFF00, 0x00FF00, 0x0000FF, 0x4B0082, 0x9400D3];
+        const colors = [0x8B4513, 0xA0522D, 0xD2691E, 0xCD853F, 0xDEB887, 0xF4A460, 0xD2B48C]; // Brown shades: saddle brown, sienna, chocolate, peru, burlywood, sandy brown, tan
 
         games.forEach((game, idx) => {
             const startAngle = Phaser.Math.DegToRad(idx * sliceAngle);
