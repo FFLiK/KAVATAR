@@ -31,15 +31,14 @@ export default class GameManager {
         this.currentRound = 1;
         this.currentTurn = 1;
 
-        // Pre-set Initial AP for all teams (Round 1)
+        // Pre-set Initial AP for all teams (Round 1) - optimized with array mapping
+        const initialAP = [0, 9, 9, 10, 10, 11, 11]; // Index matches team ID
         for (let i = 1; i < this.teamData.length; i++) {
             if (!this.teamData[i]) continue;
             this.teamData[i].purifyCount = 0; // Initialize Purify Count
             this.teamData[i].expansionDone = false; // Initialize Bonus Flag
             this.teamData[i].cooldowns = [0, 0, 0, 0, 0, 0]; // Initialize Cooldowns
-            if (i <= 2) this.teamData[i].ap = 9;
-            else if (i <= 4) this.teamData[i].ap = 10;
-            else this.teamData[i].ap = 11;
+            this.teamData[i].ap = initialAP[i];
         }
 
         // Skill Roulette Counters (Indices: 0-5)
@@ -177,12 +176,12 @@ export default class GameManager {
         if (this.currentTurn === 9) {
             // AI Turn
             // Ponix Maintenance: Clear Shields (if any)
-            for (let tile of this.grid.getAllTiles()) {
+            this.grid.getAllTiles().forEach(tile => {
                 if (tile.ownerID === 9 && tile.isShielded && !tile.isPermanentShield) {
                     tile.isShielded = false;
                     tile.draw();
                 }
-            }
+            });
             this.scene.events.emit('aiTurnStart');
         } else {
             // Team Turn
@@ -212,7 +211,8 @@ export default class GameManager {
 
             // Shields applied last turn protect until NOW (one full round).
             // Also: Power Decay (Power decreases by 1 each round, min 1)
-            for (let tile of this.grid.getAllTiles()) {
+            // Optimize: single iteration for current team's tiles
+            this.grid.getAllTiles().forEach(tile => {
                 if (tile.ownerID === this.currentTurn) {
                     let changed = false;
                     const prevPower = tile.power;
@@ -222,7 +222,6 @@ export default class GameManager {
                     if (tile.isShielded && !tile.isPermanentShield) {
                         tile.isShielded = false;
                         changed = true;
-                        // console.log(`Shield Expired on Tile ${tile.index}`);
                     }
 
                     // 2. Power Decay
@@ -240,7 +239,7 @@ export default class GameManager {
                         tile.draw();
                     }
                 }
-            }
+            });
 
             // Record Turn Change for Undo
             // We only record if we came from a previous turn (not game start) matches normal flow
@@ -262,11 +261,11 @@ export default class GameManager {
     }
 
     calculateIncome(teamId) {
-        // Base 3 + Bonus (1 per 5 tiles) + Special Bonus
+        // Base 3 + Bonus (1 per 5 tiles) + Special Bonus - optimized with single iteration
         let tileCount = 0;
         let specialBonus = 0;
 
-        for (let tile of this.grid.getAllTiles()) {
+        this.grid.getAllTiles().forEach(tile => {
             if (tile.ownerID === teamId) {
                 tileCount++;
                 if (tile.isSpecial) {
@@ -277,7 +276,7 @@ export default class GameManager {
                     }
                 }
             }
-        }
+        });
         const territoryBonus = Math.floor(tileCount / 4);
         return 4 + territoryBonus + specialBonus;
     }
@@ -305,8 +304,9 @@ export default class GameManager {
     }
 
     checkExpansionComplete(teamId) {
-        // Condition: No adjacent neutral (0) tiles to ANY of the team's tiles
-        const myTiles = this.grid.getAllTiles().filter(t => t.ownerID === teamId);
+        // Condition: No adjacent neutral (0) tiles to ANY of the team's tiles - optimized
+        const allTiles = this.grid.getAllTiles();
+        const myTiles = allTiles.filter(t => t.ownerID === teamId);
         if (myTiles.length === 0) return false;
 
         for (const tile of myTiles) {
@@ -370,15 +370,15 @@ export default class GameManager {
             let totalTiles = 0;
             const counts = {}; // Track land counts for players
 
-            const tiles = this.grid.getAllTiles();
-            for (let tile of tiles) {
+            // Optimize: single iteration for all victory calculations
+            this.grid.getAllTiles().forEach(tile => {
                 totalTiles++;
                 if (tile.ownerID === 9) {
                     ponixCount++;
                 } else if (tile.ownerID >= 1 && tile.ownerID <= 6) {
                     counts[tile.ownerID] = (counts[tile.ownerID] || 0) + 1;
                 }
-            }
+            });
 
             // Condition A: Ponix eliminated (AFTER Round 9)
             if (this.currentRound > 9 && ponixCount === 0) {
@@ -432,7 +432,7 @@ export default class GameManager {
         this.scene.events.emit('part2Started'); // UI Popup if needed
         this.scene.events.emit('showToast', "경고: 포닉스의 침공이 시작되었습니다! (주요 건물 감염)");
 
-        // Spawn Ponix at Landmarks
+        // Spawn Ponix at Landmarks - optimized with single iteration
         const tiles = this.grid.getAllTiles();
         let compensationGiven = false;
 

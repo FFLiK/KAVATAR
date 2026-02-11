@@ -10,6 +10,11 @@ export default class HexGrid {
         this.mapId = mapId;
         this.tiles = new Map(); // key: "q,r", value: HexTile
 
+        // Cache mathematical constants for performance
+        this.SQRT3 = Math.sqrt(3);
+        this.HALF_SQRT3 = this.SQRT3 / 2;
+        this.HEX_HEIGHT_MULTIPLIER = 1.5;
+
         this.generateMap();
     }
 
@@ -184,9 +189,9 @@ export default class HexGrid {
     }
 
     createTile(q, r) {
-        // Axial to Pixel conversion (pointy top)
-        const x = this.centerX + this.hexSize * (Math.sqrt(3) * q + Math.sqrt(3) / 2 * r);
-        const y = this.centerY + this.hexSize * (3 / 2 * r);
+        // Axial to Pixel conversion (pointy top) - using cached constants
+        const x = this.centerX + this.hexSize * (this.SQRT3 * q + this.HALF_SQRT3 * r);
+        const y = this.centerY + this.hexSize * (this.HEX_HEIGHT_MULTIPLIER * r);
 
         const index = this.tiles.size + 1; // 1-based sequential index
         const tile = new HexTile(this.scene, q, r, x, y, this.hexSize - 2, index); // -2 for gap

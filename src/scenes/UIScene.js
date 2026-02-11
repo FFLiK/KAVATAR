@@ -160,10 +160,13 @@ export default class UIScene extends Phaser.Scene {
 
         const inputStyle = `width: 50px; height: 24px; font-size: 16px; text-align: center; font-family: 'Ghanachocolate'; background: #4E342E; color: #deb989; border: 1px solid #8D6E63; border-radius: 4px; outline: none;`;
         this.adminApInput = this.add.dom(1640, adminY).createFromHTML(`<input type="number" id="adminApInput" style="${inputStyle}" value="0">`);
+        // Cache DOM element reference for performance
+        this.adminApInputEl = document.getElementById('adminApInput');
+        
         this.adminApInput.addListener('keydown');
         this.adminApInput.on('keydown', (e) => {
             if (e.key === 'Enter') {
-                const el = document.getElementById('adminApInput');
+                const el = this.adminApInputEl; // Use cached reference
                 if (el) {
                     const val = parseInt(el.value) || 0;
                     if (val !== 0) {
@@ -176,7 +179,7 @@ export default class UIScene extends Phaser.Scene {
 
         this.add.text(1690, adminY, 'Pt', { fontFamily: 'Ghanachocolate', fontSize: '18px', fill: '#aa885c' }).setOrigin(0.5);
         this.createButton(1760, adminY, '<적용하기>', () => {
-            const el = document.getElementById('adminApInput');
+            const el = this.adminApInputEl; // Use cached reference
             if (el) {
                 const val = parseInt(el.value) || 0;
                 if (val !== 0) {
@@ -882,7 +885,7 @@ export default class UIScene extends Phaser.Scene {
             '#f4cd18', // 2 Yellow
             '#86eb03', // 3 Green
             '#3fbaee', // 4 Blue (Brightened from #0000FF)
-            '#c36afc', // 5 Purple (Brightened from #800080)
+            '#af87ff', // 5 Purple (Updated to #af87ff)
             '#ff86de', // 6 Pink (Updated from Brown)
             '#888888',
             '#888888',

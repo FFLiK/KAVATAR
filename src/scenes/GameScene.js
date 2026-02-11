@@ -559,17 +559,8 @@ export default class GameScene extends Phaser.Scene {
             return;
         }
 
-        // Refactored to Global Adjacency Check (like Expand)
-        const neighbors = this.grid.getNeighbors(target);
-        let hasAdjacentOwn = false;
-        for (let n of neighbors) {
-            if (n.ownerID === team.id) {
-                hasAdjacentOwn = true;
-                break;
-            }
-        }
-
-        if (!hasAdjacentOwn) {
+        // Use helper function for adjacency check
+        if (!this.validateAdjacentTile(target, team)) {
             this.events.emit('showToast', "인접한 아군 영토가 있어야 합니다!");
             return;
         }
@@ -623,19 +614,20 @@ export default class GameScene extends Phaser.Scene {
         this.events.emit('showToast', "확장 모드: 인접한 중립 땅을 클릭하세요.");
     }
 
-    tryExpand(target, team) {
-        // Needs an adjacent OWNED tile.
-        // We iterate through neighbors of the target to see if ANY belong to the team.
+    validateAdjacentTile(target, team) {
+        // Helper function to check if target has adjacent friendly tiles
         const neighbors = this.grid.getNeighbors(target);
-        let hasAdjacentOwn = false;
         for (let n of neighbors) {
             if (n.ownerID === team.id) {
-                hasAdjacentOwn = true;
-                break;
+                return true;
             }
         }
+        return false;
+    }
 
-        if (!hasAdjacentOwn) {
+    tryExpand(target, team) {
+        // Needs an adjacent OWNED tile.
+        if (!this.validateAdjacentTile(target, team)) {
             this.events.emit('showToast', "인접한 아군 영토가 있어야 합니다!");
             return;
         }
@@ -721,8 +713,7 @@ export default class GameScene extends Phaser.Scene {
         });
 
         this.selectedTile.isShielded = true;
-        this.selectedTile.draw();
-        this.selectedTile.draw();
+        this.selectedTile.draw(); // Remove duplicate draw() call
         team.ap -= 2;
         this.events.emit('updateUI');
         this.gameManager.addTime(5);

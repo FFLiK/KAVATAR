@@ -1,3 +1,15 @@
+// Cache mathematical constants for all hex tiles
+const HEX_DEG_TO_RAD = Math.PI / 180;
+const HEX_HIT_POINTS = [];
+for (let i = 0; i < 6; i++) {
+    const angle_deg = 60 * i - 30;
+    const angle_rad = HEX_DEG_TO_RAD * angle_deg;
+    HEX_HIT_POINTS.push({
+        x: Math.cos(angle_rad),
+        y: Math.sin(angle_rad)
+    });
+}
+
 export default class HexTile extends Phaser.GameObjects.Container {
     constructor(scene, q, r, x, y, size, index) {
         super(scene, x, y);
@@ -8,17 +20,11 @@ export default class HexTile extends Phaser.GameObjects.Container {
         this.size = size;
         this.index = index;
 
-        // Make Container Interactive (Hexagon Hit Area)
-        // Pointy Top Hexagon Points
-        const hitPoints = [];
-        for (let i = 0; i < 6; i++) {
-            const angle_deg = 60 * i - 30;
-            const angle_rad = Math.PI / 180 * angle_deg;
-            hitPoints.push({
-                x: size * Math.cos(angle_rad),
-                y: size * Math.sin(angle_rad)
-            });
-        }
+        // Make Container Interactive (Hexagon Hit Area) - using cached points
+        const hitPoints = HEX_HIT_POINTS.map(point => ({
+            x: size * point.x,
+            y: size * point.y
+        }));
         this.setInteractive(new Phaser.Geom.Polygon(hitPoints), Phaser.Geom.Polygon.Contains);
 
         // Game Data
